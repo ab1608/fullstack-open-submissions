@@ -1,0 +1,14 @@
+sequenceDiagram
+    participant user
+	participant browser
+	participant server
+	
+	user->>browser: type and submit form
+    browser-->>server: POST https://studies.cs.helsinki.fi/exampleapp/new_note_spa
+    note right of browser: new note as JSON data containing the note content and timestamp
+
+    server-->>browser: Status 201 created
+    note right of browser: the form element event handler instruct the browser to rerender the notes without refreshing
+
+    
+
