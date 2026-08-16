@@ -53,9 +53,6 @@ app.get('/info', (req, res) => {
 
 app.post('/api/persons', (req, res, next) => {
   const body = req.body; // req.body contains the json data
-  // if (!body.name || !body.number) {
-  //   return res.status(400).json({ error: 'contact name or number is missing' });
-  // }
 
   const person = new Contact({ name: body.name, number: body.number });
   person
