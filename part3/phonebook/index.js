@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
-const cors = require('cors');
 const mongoose = require('mongoose');
 const Contact = require('./models/contact');
 
@@ -103,7 +102,7 @@ app.use(unknownEndpoint);
 
 const errorHandler = (error, req, res, next) => {
   console.log(error.message);
-  if (error.name == 'CastError') {
+  if (error.name === 'CastError') {
     return res.status(400).send({ error: 'malformed id' });
   } else if (error.name === 'ValidationError') {
     return res.status(400).json({ error: error.message });
