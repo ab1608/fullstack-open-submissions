@@ -95,6 +95,7 @@ const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
 const unknownEndpoint = (req, res) => {
   res.status(404).send({ error: 'uknown endpoint' });
 };
