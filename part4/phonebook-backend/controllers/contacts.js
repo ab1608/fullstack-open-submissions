@@ -1,8 +1,9 @@
 const contactRouter = require('express').Router();
 const Contact = require('../models/contact');
 
-contactRouter.get('/', (req, res) => {
-  Contact.find({}).then((contacts) => res.json(contacts));
+contactRouter.get('/', async (req, res) => {
+  const contacts = await Contact.find({});
+  return res.json(contacts);
 });
 
 /*
@@ -10,59 +11,48 @@ The 400 (Bad Request) status code indicates that the server cannot or will not p
 the request due to something that is perceived to be a client error
 (e.g., malformed request syntax, invalid request message framing, or deceptive request routing).
 */
-contactRouter.get('/:id', (req, res, next) => {
+contactRouter.get('/:id', async (req, res) => {
   const id = req.params.id;
-  Contact.findById(id)
-    .then((contact) => {
-      if (contact) {
-        res.json(contact);
-      } else {
-        res.status(404).end();
-      }
-    })
-    .catch((error) => {
-      next(error);
-    });
+
+  const foundContact = await Contact.findById(id);
+
+  if (foundContact) {
+    res.json(foundContact);
+  } else {
+    res.status(404).end();
+  }
 });
 
-contactRouter.post('/', (req, res, next) => {
+contactRouter.post('/', async (req, res) => {
   const body = req.body; // req.body contains the json data
 
-  const person = new Contact({ name: body.name, number: body.number });
-  person
-    .save()
-    .then((savedPerson) => {
-      res.json(savedPerson);
-    })
-    .catch((error) => next(error));
+  const newContact = new Contact({ name: body.name, number: body.number });
+
+  const savedContact = await newContact.save();
+  res.status(201).json(savedContact);
 });
 
-contactRouter.put('/:id', (req, res, next) => {
+contactRouter.put('/:id', async (req, res) => {
   const id = req.params.id;
   const body = req.body;
 
-  Contact.findById(id)
-    .then((contact) => {
-      if (!contact) {
-        return res.status(404).end();
-      }
-      contact.name = body.name;
-      contact.number = body.number;
+  const existingContact = await Contact.findById(id);
 
-      return contact.save().then((updatedContact) => {
-        res.json(updatedContact);
-      });
-    })
-    .catch((error) => next(error));
+  if (!existingContact) {
+    res.status(404).end();
+  } else {
+    existingContact.name = body.name;
+    existingContact.number = body.number;
+  }
+
+  const updatedContact = await existingContact.save();
+  res.json(updatedContact);
 });
 
-contactRouter.delete('/:id', (req, res, next) => {
+contactRouter.delete('/:id', async (req, res) => {
   const id = req.params.id;
-  Contact.findByIdAndDelete(id)
-    .then((res) => {
-      res.status(204).end();
-    })
-    .catch((error) => next(error));
+  await Contact.findByIdAndDelete(id);
+  res.status(204).end();
 });
 
 contactRouter.get('/info', (req, res) => {
