@@ -1,23 +1,24 @@
-const { test, after, beforeEach } = require('node:test');
+const { test, after, beforeEach, describe } = require('node:test');
 const assert = require('node:assert');
 const mongoose = require('mongoose');
 const supertest = require('supertest');
 const app = require('../app');
 const Contact = require('../models/contact');
+const User = require('../models/user');
 const helper = require('./test_helper');
+const bcrypt = require('bcrypt');
 
 const api = supertest(app);
 
 beforeEach(async () => {
   await Contact.deleteMany({});
+  await Contact.insertMany(helper.initialContacts);
 
   // const contactObjects = helper.initialContacts.map((c) => new Contact(c));
   // // Array of Promises created by the .save() function
   // const promises = contactObjects.map((c) => c.save(0));
   // // .all() method will fulfill each promises
   // await Promise.all(promises);
-
-  await Contact.insertMany(helper.initialContacts);
 });
 
 test('phonebook is returned as json', async () => {
@@ -100,6 +101,39 @@ test('a contact can be deleted', async () => {
 
   // Ensure the database is one record fewer
   assert.deepStrictEqual(contactsAtEnd.length, helper.initialContacts.length - 1);
+});
+
+describe('when there is initially one user in db', () => {
+  beforeEach(async () => {
+    await User.deleteMany({});
+
+    const passwordHash = await bcrypt.hash('secret', 10);
+    const user = new User({ username: 'root', passwordHash });
+
+    await user.save();
+  });
+
+  test('creation succeeds with a fresh username', async () => {
+    const usersAtStart = await helper.usersInDb();
+
+    const newUser = {
+      username: 'mluukkai',
+      name: 'Matti Luukkainen',
+      password: 'salainen',
+    };
+
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(201)
+      .expect('Content-Type', /application\/json/);
+
+    const usersAtEnd = await helper.usersInDb();
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length + 1);
+
+    const usernames = usersAtEnd.map((u) => u.username);
+    assert(usernames.includes(newUser.username));
+  });
 });
 
 after(async () => {

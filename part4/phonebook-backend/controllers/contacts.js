@@ -1,8 +1,18 @@
 const contactRouter = require('express').Router();
 const Contact = require('../models/contact');
+const User = require('../models/user');
+const jwt = require('jsonwebtoken');
+
+const getTokenFrom = (req) => {
+  const auth = req.get('authorization');
+  if (auth && auth.startsWith('Bearer ')) {
+    return auth.replace('Bearer ', '');
+  }
+  return null;
+};
 
 contactRouter.get('/', async (req, res) => {
-  const contacts = await Contact.find({});
+  const contacts = await Contact.find({}).populate('user', { username: 1, name: 1 });
   return res.json(contacts);
 });
 
@@ -26,9 +36,25 @@ contactRouter.get('/:id', async (req, res) => {
 contactRouter.post('/', async (req, res) => {
   const body = req.body; // req.body contains the json data
 
-  const newContact = new Contact({ name: body.name, number: body.number });
+  const decodedToken = jwt.verify(getTokenFrom(req), process.env.SECRET);
+  if (!decodedToken.id) {
+    return res.status(401).json({ error: 'token invalid' });
+  }
+
+  const user = await User.findById(decodedToken.id);
+
+  if (!user) {
+    return res.status(400).json({ error: 'userID missing or invalid' });
+  }
+
+  const newContact = new Contact({ name: body.name, number: body.number, user: user._id });
 
   const savedContact = await newContact.save();
+
+  // Store the reference to the newly created contact in the user profile
+  user.contacts = user.contacts.concat(savedContact._id);
+  await user.save();
+
   res.status(201).json(savedContact);
 });
 

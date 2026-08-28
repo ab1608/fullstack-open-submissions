@@ -15,6 +15,10 @@ const contactSchema = new mongoose.Schema({
     required: true,
     minLength: 10,
   },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
 });
 
 contactSchema.set('toJSON', {
@@ -22,7 +26,10 @@ contactSchema.set('toJSON', {
     returnedObject.id = returnedObject._id.toString();
     delete returnedObject._id;
     delete returnedObject.__v;
+    // do not reveal passwordHash
+    delete returnedObject.passwordHash;
   },
 });
 
-module.exports = mongoose.model('Contact', contactSchema);
+const Contact = mongoose.model('Contact', contactSchema);
+module.exports = Contact;
