@@ -14,16 +14,19 @@ usersRouter.post('/', async (req, res) => {
   const { username, name, password } = req.body;
 
   const saltRounds = 10;
-  const passwordHash = await bcrypt.hash(password, saltRounds);
+  if (password.length > 3) {
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+    const user = new User({
+      username,
+      name,
+      passwordHash,
+    });
 
-  const user = new User({
-    username,
-    name,
-    passwordHash,
-  });
-
-  const savedUser = await user.save();
-  res.status(201).json(savedUser);
+    const savedUser = await user.save();
+    res.status(201).json(savedUser);
+  } else {
+    res.status(401).json({ error: 'password must be greater than 3 characters long' });
+  }
 });
 
 module.exports = usersRouter;

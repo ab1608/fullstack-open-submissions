@@ -5,8 +5,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true, // ensure unique usernames
+    minLength: 3,
   },
-  name: String,
+  name: {
+    type: String,
+    required: true,
+    minLength: 1,
+  },
   passwordHash: String,
   blogs: [
     {
