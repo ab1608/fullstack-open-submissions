@@ -62,6 +62,55 @@ describe('when there is initially one user in db', () => {
 
     assert.strictEqual(currentUsers.length, initialUser.length);
   });
+
+  test('users are returned with the blogs they created', async () => {
+    const loginResponse = await api
+      .post('/api/login')
+      .send({ username: 'root', password: 'super' })
+      .expect(200);
+
+    await api
+      .post('/api/blogs')
+      .set('Authorization', `Bearer ${loginResponse.body.token}`)
+      .send({
+        title: 'Test blog',
+        author: 'Rooter',
+        url: 'https://example.com/test-blog',
+        likes: 5,
+      })
+      .expect(201);
+
+    const response = await api.get('/api/users').expect(200);
+
+    assert.strictEqual(response.body[0].blogs.length, 1);
+    assert.strictEqual(response.body[0].blogs[0].title, 'Test blog');
+  });
+
+  test('deleting a blog removes it from the user blogs list', async () => {
+    const loginResponse = await api
+      .post('/api/login')
+      .send({ username: 'root', password: 'super' })
+      .expect(200);
+
+    const createdBlog = await api
+      .post('/api/blogs')
+      .set('Authorization', `Bearer ${loginResponse.body.token}`)
+      .send({
+        title: 'Delete me',
+        author: 'Rooter',
+        url: 'https://example.com/delete-me',
+        likes: 1,
+      })
+      .expect(201);
+
+    await api
+      .delete(`/api/blogs/${createdBlog.body.id}`)
+      .set('Authorization', `Bearer ${loginResponse.body.token}`)
+      .expect(204);
+
+    const response = await api.get('/api/users').expect(200);
+    assert.strictEqual(response.body[0].blogs.length, 0);
+  });
 });
 
 after(async () => {
