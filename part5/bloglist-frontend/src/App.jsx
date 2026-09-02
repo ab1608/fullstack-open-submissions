@@ -1,27 +1,22 @@
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import blogService from './services/blogs';
 import loginService from './services/login';
 import Blog from './components/Blog';
 import BlogForm from './components/BlogForm';
 import Notification from './components/Notification';
 import User from './components/User';
+import LoginForm from './components/LoginForm';
+import Togglable from './components/Togglable';
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
-
-  // User credentials
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
-
-  // Blog details
-  const [title, setTitle] = useState('');
-  const [author, setAuthor] = useState('');
-  const [url, setUrl] = useState('');
 
   // Notification details
   const [message, setMessage] = useState(null);
   const [success, setSuccess] = useState(null);
+
+  const blogFormRef = useRef();
 
   useEffect(() => {
     const getBlogs = async () => {
@@ -49,16 +44,13 @@ const App = () => {
     }, 5_000);
   };
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
+  const handleLogin = async (userCredentials) => {
     try {
-      const loggedUser = await loginService.login({ username, password });
+      const loggedUser = await loginService.login(userCredentials);
       // Save user credentials to browser
       window.localStorage.setItem('loggedUser', JSON.stringify(loggedUser));
       blogService.setToken(loggedUser.token);
       setUser(loggedUser);
-      setUsername('');
-      setPassword('');
     } catch (error) {
       updateNotification(`Could not log in due to ${error}`, 0);
     }
@@ -68,86 +60,72 @@ const App = () => {
     // Delete user credentials
     window.localStorage.removeItem('loggedUser');
     setUser(null);
-    setUsername('');
-    setPassword('');
-  };
-  const loginForm = () => {
-    return (
-      <div>
-        <h2>Login</h2>
-        <form onSubmit={handleLogin}>
-          <div>
-            <label>
-              username
-              <input
-                type="text"
-                value={username}
-                onChange={({ target }) => {
-                  setUsername(target.value);
-                }}
-              />
-            </label>
-          </div>
-          <div>
-            <label>
-              password
-              <input
-                type="password"
-                value={password}
-                onChange={({ target }) => {
-                  setPassword(target.value);
-                }}
-              />
-            </label>
-          </div>
-          <button type="submit">Login</button>
-        </form>
-      </div>
-    );
   };
 
-  const handleTitle = (event) => setTitle(event.target.value);
-
-  const handleAuthor = (event) => setAuthor(event.target.value);
-
-  const handleUrl = (event) => setUrl(event.target.value);
-
-  const addBlog = async (event) => {
-    event.preventDefault();
+  const addBlog = async (blogObject) => {
     try {
-      const newBlog = { title, author, url };
-
-      await blogService.create(newBlog);
+      blogFormRef.current.toggleVisibility();
+      await blogService.create(blogObject);
       updateNotification('A new blog was created.', 1);
 
       const latestBlogs = await blogService.getAll();
       setBlogs(latestBlogs);
-      setTitle('');
-      setAuthor('');
-      setUrl('');
     } catch (error) {
-      updateNotification(`Could not create blog with ${error}`, 0);
+      updateNotification(`Could not create blog due to ${error}`, 0);
     }
   };
 
+  const deleteBlog = async (blogId) => {
+    try {
+      await blogService.deleteBlog(blogId);
+      const latestBlogs = await blogService.getAll();
+      setBlogs(latestBlogs);
+    } catch (error) {
+      updateNotification(`Could not delete blog due to ${error}`, 0);
+    }
+  };
+
+  const handleLikes = async (blogId, updatedBlog) => {
+    try {
+      await blogService.update(blogId, updatedBlog);
+      updateNotification('Blog was updated', 1);
+      const latestBlogs = await blogService.getAll();
+      setBlogs(latestBlogs);
+    } catch (error) {
+      updateNotification(`Could not update blog due to ${error}`, 0);
+    }
+  };
+
+  const displayBlogs = () => {
+    const sortedBlogs = blogs.sort((a, b) => b.likes - a.likes);
+    return (
+      <div>
+        <h2>Blogs</h2>
+        {sortedBlogs.map((b) => (
+          <Blog
+            key={b.id}
+            blog={b}
+            handleLikes={handleLikes}
+            handleDelete={deleteBlog}
+            loggedUser={user}
+          />
+        ))}
+      </div>
+    );
+  };
+
   if (user === null) {
-    return loginForm();
+    return <LoginForm handleLogin={handleLogin} />;
   } else {
     return (
       <div>
         <User user={user} handleLogout={handleLogout} />
         <Notification message={message} successStatus={success} />
-        <h2>Blogs</h2>
-        {blogs.map((b) => (
-          <Blog key={b.id} blog={b} />
-        ))}
         <h2>Create new</h2>
-        <BlogForm
-          handleAuthor={handleAuthor}
-          handleTitle={handleTitle}
-          handleUrl={handleUrl}
-          addBlog={addBlog}
-        />
+        <Togglable viewLabel={'Create'} hideLabel={'Cancel'} ref={blogFormRef}>
+          <BlogForm handleNewBlog={addBlog} />
+        </Togglable>
+        {displayBlogs()}
       </div>
     );
   }
