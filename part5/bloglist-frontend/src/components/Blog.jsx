@@ -35,7 +35,7 @@ const Blog = ({ blog, handleLikes, handleDelete, loggedUser }) => {
   };
 
   const deleteBlogButton = () => {
-    if (loggedUser != null && blog.user.username === loggedUser.username) {
+    if (loggedUser !== null && blog.user.username === loggedUser.username) {
       console.log(loggedUser);
       return <button onClick={removeBlog}>Delete</button>;
     }

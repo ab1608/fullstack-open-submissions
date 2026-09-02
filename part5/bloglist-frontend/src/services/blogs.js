@@ -14,10 +14,10 @@ const getAll = async () => {
 };
 
 /*
-e Axios POST method takes three parameters: URL, data, and config. 
-URL is the server path to which we are sending the request (note that it is a string). 
-data, which is an object, contains the request body that we're sending to the server. 
-config is the third parameter where you can specify the header content type, authorization, and more. 
+e Axios POST method takes three parameters: URL, data, and config.
+URL is the server path to which we are sending the request (note that it is a string).
+data, which is an object, contains the request body that we're sending to the server.
+config is the third parameter where you can specify the header content type, authorization, and more.
 It is also in an object format.
 */
 const create = async (newBlog) => {
