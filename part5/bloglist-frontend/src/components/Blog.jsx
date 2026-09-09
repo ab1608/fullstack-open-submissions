@@ -36,32 +36,27 @@ const Blog = ({ blog, handleLikes, handleDelete, loggedUser }) => {
 
   const deleteBlogButton = () => {
     if (loggedUser !== null && blog.user.username === loggedUser.username) {
-      console.log(loggedUser);
       return <button onClick={removeBlog}>Delete</button>;
     }
   };
 
   const blogDetails = () => {
     return (
-      <div>
-        <div>Author: {blog.author}</div>
+      <div id={'blog-details'}>
         <div>
           Likes: {blog.likes}
           <button onClick={addLikes}>Like</button>
         </div>
         <div>Url: {blog.url}</div>
-        <div>Posted by: {blog.user.username}</div>
-        {/*{deleteVisible && <button onClick={removeBlog}>Delete</button>}*/}
         {deleteBlogButton()}
-        {/*<button onClick={removeBlog}>Delete</button>*/}
       </div>
     );
   };
 
   return (
-    <div style={blogStyle}>
+    <div style={blogStyle} id="blog-primary">
       <div>
-        {blog.title}
+        {blog.title} {blog.author}
         <button onClick={handleVisible}>{buttonLabel}</button>
       </div>
       {visibleDetail && blogDetails()}
