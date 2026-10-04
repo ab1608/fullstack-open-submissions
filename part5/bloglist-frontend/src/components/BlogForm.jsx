@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { TextField, Button } from '@mui/material';
 
 const BlogForm = ({ handleNewBlog }) => {
   const [title, setTitle] = useState('');
@@ -31,26 +32,25 @@ const BlogForm = ({ handleNewBlog }) => {
   const handleUrl = (event) => setUrl(event.target.value);
 
   return (
-    <form onSubmit={newBlog}>
-      <div>
-        <label>
-          title <input onChange={handleTitle} />
-        </label>
-      </div>
-      <div>
-        <label>
-          author <input onChange={handleAuthor} />
-        </label>
-      </div>
-      <div>
-        <label>
-          url <input onChange={handleUrl} />
-        </label>
-      </div>
-      <div>
-        <button type="submit">Create</button>
-      </div>
-    </form>
+    <div>
+      <h2>Create a new blog</h2>
+      <form onSubmit={newBlog}>
+        <div>
+          <TextField label={'title'} onChange={handleTitle}></TextField>
+        </div>
+        <div>
+          <TextField label={'author'} onChange={handleAuthor}></TextField>
+        </div>
+        <div>
+          <TextField label={'url'} onChange={handleUrl}></TextField>
+        </div>
+        <div>
+          <Button type="submit" variant="contained" style={{ marginTop: 10 }}>
+            Create
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
 

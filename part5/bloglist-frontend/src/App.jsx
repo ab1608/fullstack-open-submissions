@@ -9,16 +9,17 @@ import LoginForm from './components/LoginForm';
 import Togglable from './components/Togglable';
 import { Routes, Route, Link, useMatch } from 'react-router-dom';
 import BlogList from './components/BlogList.jsx';
+import { Container, AppBar, Toolbar, Button } from '@mui/material';
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
   const [user, setUser] = useState(null);
 
   // Notification details
-  const [message, setMessage] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [notification, setNotification] = useState(null);
 
   const blogFormRef = useRef(null);
+  // Requested blog details
   const match = useMatch('/api/blogs/:id');
   const matchBlog = match ? blogs.find((blog) => blog.id === match.params.id) : null;
 
@@ -39,12 +40,10 @@ const App = () => {
     }
   }, []);
 
-  const updateNotification = (message, successCode) => {
-    setMessage(message);
-    setSuccess(successCode);
+  const updateNotification = (message, severityType) => {
+    setNotification({ text: message, type: severityType });
     setTimeout(() => {
-      setMessage(null);
-      setSuccess(null);
+      setNotification(null);
     }, 5_000);
   };
 
@@ -56,7 +55,7 @@ const App = () => {
       blogService.setToken(loggedUser.token);
       setUser(loggedUser);
     } catch (error) {
-      updateNotification(`Could not log in due to ${error}`, 0);
+      updateNotification(`Could not log in due to ${error}`, 'error');
     }
   };
 
@@ -69,12 +68,11 @@ const App = () => {
   const addBlog = async (blogObject) => {
     try {
       await blogService.create(blogObject);
-      updateNotification('A new blog was created.', 1);
-
+      updateNotification('A new blog was created.', 'success');
       const latestBlogs = await blogService.getAll();
       setBlogs(latestBlogs);
     } catch (error) {
-      updateNotification(`Could not create blog due to ${error}`, 0);
+      updateNotification(`Could not create blog due to ${error}`, 'error');
     }
   };
 
@@ -84,18 +82,18 @@ const App = () => {
       const latestBlogs = await blogService.getAll();
       setBlogs(latestBlogs);
     } catch (error) {
-      updateNotification(`Could not delete blog due to ${error}`, 0);
+      updateNotification(`Could not delete blog due to ${error}`, 'error');
     }
   };
 
   const handleLikes = async (blogId, updatedBlog) => {
     try {
       await blogService.update(blogId, updatedBlog);
-      updateNotification('Blog was updated', 1);
+      updateNotification('Blog was liked', 'success');
       const latestBlogs = await blogService.getAll();
       setBlogs(latestBlogs);
     } catch (error) {
-      updateNotification(`Could not update blog due to ${error}`, 0);
+      updateNotification(`Could not update blog due to ${error}`, 'error');
     }
   };
 
@@ -111,47 +109,52 @@ const App = () => {
     }
   };
 
-  // React in-line CSS for Link navigation bar
+  // React in-line CSS for Navigation
   const padding = { padding: 5 };
+  const style = { '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } };
 
   return (
-    <div>
-      {/* Page navigation links*/}
+    <Container>
       <div>
-        <Link style={padding} to={'/'}>
-          blogs
-        </Link>
-        <Link style={padding} to={'/create'}>
-          new blog
-        </Link>
-        {(!user && (
-          <Link style={padding} to={'/login'}>
-            login
-          </Link>
-        )) || <button onClick={handleLogout}>logout</button>}
+        {/* Page navigation links*/}
+        <AppBar position={'static'}>
+          <Toolbar>
+            <Button color="inherit" component={Link} to={'/'} sx={style}>
+              blogs
+            </Button>
+            <Button color="inherit" component={Link} to={'/create'} sx={style}>
+              new blog
+            </Button>
+            <Button color="inherit" component={Link} to={'/login'} sx={style}>
+              login
+            </Button>
+          </Toolbar>
+        </AppBar>
+
+        <Notification notification={notification}></Notification>
+
+        {/* Routes and their corresponding elements */}
+        <Routes>
+          <Route path={'/'} element={<BlogList blogs={blogs} />}></Route>
+
+          <Route path={'/login'} element={displayLogin()}></Route>
+
+          <Route path={'/create'} element={<BlogForm handleNewBlog={addBlog} />}></Route>
+
+          <Route
+            path={'/api/blogs/:id'}
+            element={
+              <Blog
+                blog={matchBlog}
+                handleLikes={handleLikes}
+                handleDelete={deleteBlog}
+                loggedUser={user}
+              />
+            }
+          ></Route>
+        </Routes>
       </div>
-
-      {/* Routes and their corresponding elements */}
-      <Routes>
-        <Route path={'/'} element={<BlogList blogs={blogs} />}></Route>
-
-        <Route path={'/login'} element={displayLogin()}></Route>
-
-        <Route path={'/create'} element={<BlogForm handleNewBlog={addBlog} />}></Route>
-
-        <Route
-          path={'/api/blogs/:id'}
-          element={
-            <Blog
-              blog={matchBlog}
-              handleLikes={handleLikes}
-              handleDelete={deleteBlog}
-              loggedUser={user}
-            />
-          }
-        ></Route>
-      </Routes>
-    </div>
+    </Container>
   );
 };
 

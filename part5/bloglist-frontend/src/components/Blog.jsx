@@ -1,22 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Card,
+  CardContent,
+  CardActions,
+  CardHeader,
+  Button,
+  Box,
+  Stack,
+  Link,
+  Typography,
+} from '@mui/material';
 
 const Blog = ({ blog, handleLikes, handleDelete, loggedUser }) => {
-  const blogStyle = {
-    paddingTop: 10,
-    paddingLeft: 2,
-    border: 'solid',
-    borderWidth: 1,
-    marginBottom: 5,
-  };
   const [visibleDetail, setVisibleDetail] = useState(false);
-  const buttonLabel = visibleDetail ? 'Hide' : 'View';
-  const navigate = useNavigate();
 
-  const handleVisible = (event) => {
-    event.preventDefault();
-    setVisibleDetail(!visibleDetail);
-  };
+  const navigate = useNavigate();
 
   const addLikes = (event) => {
     event.preventDefault();
@@ -31,42 +30,31 @@ const Blog = ({ blog, handleLikes, handleDelete, loggedUser }) => {
 
   const removeBlog = (event) => {
     event.preventDefault();
-    if (window.confirm(`Do you want to delete ${blog.title} ?`)) {
-      handleDelete(blog.id);
-      navigate('/');
-    }
-  };
-
-  const deleteBlogButton = () => {
-    if (loggedUser !== null && blog.user.username === loggedUser.username) {
-      return <button onClick={removeBlog}>Delete</button>;
-    }
-  };
-
-  const blogDetails = () => {
-    return (
-      <div id={'blog-details'}>
-        <div>
-          Likes: {blog.likes}
-          {loggedUser && <button onClick={addLikes}>Like</button>}
-        </div>
-        <div>Url: {blog.url}</div>
-        {deleteBlogButton()}
-      </div>
-    );
+    if (loggedUser !== null && blog.user.username === loggedUser.username)
+      if (window.confirm(`Do you want to delete ${blog.title} ?`)) {
+        handleDelete(blog.id);
+        navigate('/');
+      }
   };
 
   if (!blog) {
     return null;
   }
   return (
-    <div style={blogStyle} id="blog-primary">
-      <div>
-        {blog.title} {blog.author}
-        <button onClick={handleVisible}>{buttonLabel}</button>
-      </div>
-      {visibleDetail && blogDetails()}
-    </div>
+    <Card variant="outlined" sx={{ marginTop: 4, marginBottom: 4 }}>
+      <CardHeader title={blog.title} subheader={`Authored by ${blog.author}`}></CardHeader>
+      <CardContent>
+        <Link component="div">{blog.url}</Link>
+      </CardContent>
+
+      <CardActions disableSpacing>
+        <Typography variant={'body2'}>{blog.likes} likes</Typography>
+        <Button onClick={addLikes}>Like</Button>
+        <Button onClick={removeBlog} color="error">
+          Delete
+        </Button>
+      </CardActions>
+    </Card>
   );
 };
 
