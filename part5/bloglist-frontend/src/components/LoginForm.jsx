@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const LoginForm = ({ handleLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+
+  const navigate = useNavigate();
 
   const handleUsernameChange = (event) => setUsername(event.target.value);
   const handlePasswordChange = (event) => setPassword(event.target.value);
@@ -13,6 +16,8 @@ const LoginForm = ({ handleLogin }) => {
 
     setUsername('');
     setPassword('');
+
+    navigate('/');
   };
 
   return (

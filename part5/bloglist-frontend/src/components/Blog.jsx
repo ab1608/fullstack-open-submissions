@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Blog = ({ blog, handleLikes, handleDelete, loggedUser }) => {
   const blogStyle = {
@@ -10,6 +11,7 @@ const Blog = ({ blog, handleLikes, handleDelete, loggedUser }) => {
   };
   const [visibleDetail, setVisibleDetail] = useState(false);
   const buttonLabel = visibleDetail ? 'Hide' : 'View';
+  const navigate = useNavigate();
 
   const handleVisible = (event) => {
     event.preventDefault();
@@ -31,6 +33,7 @@ const Blog = ({ blog, handleLikes, handleDelete, loggedUser }) => {
     event.preventDefault();
     if (window.confirm(`Do you want to delete ${blog.title} ?`)) {
       handleDelete(blog.id);
+      navigate('/');
     }
   };
 
@@ -45,7 +48,7 @@ const Blog = ({ blog, handleLikes, handleDelete, loggedUser }) => {
       <div id={'blog-details'}>
         <div>
           Likes: {blog.likes}
-          <button onClick={addLikes}>Like</button>
+          {loggedUser && <button onClick={addLikes}>Like</button>}
         </div>
         <div>Url: {blog.url}</div>
         {deleteBlogButton()}
@@ -53,6 +56,9 @@ const Blog = ({ blog, handleLikes, handleDelete, loggedUser }) => {
     );
   };
 
+  if (!blog) {
+    return null;
+  }
   return (
     <div style={blogStyle} id="blog-primary">
       <div>
